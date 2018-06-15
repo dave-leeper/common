@@ -1,0 +1,185 @@
+@import ./widgets/global.sass
+
+body
+
+.parler-plugin
+    font: 14px "Century Gothic", Futura, sans-serif
+    margin: 20px
+    display: flex
+    flex-direction: column
+    align-items: flex-start
+    width: 90%
+    padding: 0 3px 3px 10px
+
+.logoPanel
+  +flex-column()
+  padding-top: 5px
+  justify-content: center
+  align-items: center
+  width: 100%
+  height: 100px
+
+.logo
+  width: 40px
+  height: 40px
+  font-size: 1em
+  font-weight: 900
+  color: $parler-red
+  margin-right: 5px
+
+.logoParler
+  width: 42px
+  height: 40px
+  font-size: 1em
+  font-weight: 900
+  color: $parler-red
+
+.logoParlerSubTitle
+  font-size: 0.9em
+  font-weight: 400
+  color: $parler-red
+
+.login
+  width: 40px
+  height: 40px
+  font-size: 1em
+  font-weight: 600
+  color: $parler-red
+  padding: 10px 0 5px 0
+  cursor: pointer
+
+.commentCountRow
+  +flex-row()
+  justify-content: space-between
+  align-content: flex-end
+  width: 100%
+
+.hidden
+  visibility: hidden
+
+.not-hidden
+  visibility: inherit
+
+.commentCount
+  padding-top: 20px
+  padding-bottom: 5px
+  font-weight: 900
+  border-bottom: 2px solid BLACK
+  white-space: nowrap
+  align-self: flex-end
+
+.commentCountRemainder
+  +flex-row()
+  align-content: right
+  justify-content: flex-end
+  width: 100%
+  padding-top: 20px
+  padding-bottom: 5px
+  font-weight: 900
+  border-bottom: 2px solid LIGHTGREY
+
+.commentCountUserWrapper
+  +flex-row()
+  justify-content: flex-end
+  align-content: center
+  width: 100%
+
+.commentCountUserName
+  align-self: flex-end
+
+.style-comment-entry
+  +flex-row()
+  padding-top: 5px
+
+.style-comment-list
+  +flex-column()
+  width: 100%
+  height: 100%
+
+.style-comment-info
+  +flex-column()
+  width: 100%
+  padding: 0 0 0 5px
+
+.style-comment
+  +flex-row()
+  width: 100%
+
+.style-comment-box-form
+  +flex-column()
+  +border-radius(10px)
+  width: 1000px
+  height: 80px
+  padding: 0 5px 5px 5px
+
+.style-comment-box-form-hidden
+  +flex-column()
+  +border-radius(10px)
+  width: 1000px
+  height: 80px
+  padding: 0 5px 5px 5px
+
+.style-comment-box-body
+  width: 100%
+  height: 60px
+  font-size: 1em
+  color: black
+
+.style-comment-box-letter-count
+  +flex-row()
+  padding-top: 5px
+
+.style-comment-box-submit-button
+  width: 100px
+  height: 25px
+  background: $parler-red
+  color: white
+  font-size: 1em
+
+.style-comment-box-submit-button-hidden
+  width: 100px
+  height: 25px
+  font-size: 1em
+  background: $parler-red
+  color: white
+  visibility: hidden
+
+.style-comment-box-letter-count-over
+  +flex-row()
+  padding-top: 5px
+  color: $parler-red
+
+.style-comment-icon-box
+  width: 40px
+  height: 40px
+
+.style-comment-icon-image
+  width: 100%
+  height: 100%
+  +border-radius(50%)
+
+.style-comment-body
+  padding: 3px 0 3px 0
+
+.style-comment-count-hidden
+  padding: 0 0 0 0
+  width: 0
+  visibility: hidden
+
+.sortBy
+  font-weight: 600
+  color: DARKGREY
+  cursor: pointer
+
+.navigationBar
+  +flex-row()
+  justify-content: flex-start
+  width: 450px
+  white-space: nowrap
+  cursor: pointer
+
+.alert
+  position: -webkit-sticky
+  position: sticky
+  top: 0
+  width: 100%
