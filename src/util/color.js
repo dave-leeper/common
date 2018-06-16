@@ -354,7 +354,7 @@ export default class Color {
      * @param {Color} color1: A color.
      * @param {Color} color2: A color.
      * @param {Integer} inBlendOperation: The blend operation.
-     * @returns {Color} An color created by blending th e two original colors.
+     * @returns {Color} An color created by blending the two original colors.
      */
     static blend(color1, color2, inBlendOperation) {
         let color1Normalized = Color.getNormalizedColor(color1);
@@ -382,6 +382,156 @@ export default class Color {
         }
         color2Normalized = Color.clamp(color2Normalized);
         return Color.get255Color(color2Normalized);
+    }
+
+    static getDarkerColor(color, divisor) {
+        let div = ((divisor)? divisor : 2 );
+        let color255 = Color.get255Color(color);
+        let hsl = Color.xlateRGB255ToHSL360(color255.r, color255.g, color255.b);
+        let light = hsl[2] / div;
+        let rgb = Color.xlateHSL360ToRGB255( hsl[0], hsl[1], light );
+        return new Color( rgb[0], rgb[1], rgb[2], color.transparent, false );
+    }
+
+    static getLighterColor(color, multiplier) {
+        let mul = ((multiplier)? multiplier : 0.5 );
+        let color255 = Color.get255Color(color);
+        let hsl = Color.xlateRGB255ToHSL360(color255.r, color255.g, color255.b);
+        let light = Math.min(100, hsl[2] + (hsl[2] * mul));
+        let rgb = Color.xlateHSL360ToRGB255( hsl[0], hsl[1], light );
+        return new Color( rgb[0], rgb[1], rgb[2], color.transparent, false );
+    }
+
+    /**
+     * Rotates a hue by a given number of degrees.
+     *
+     * @param {Number} hue: A hue.
+     * @param {Number} degrees: The number of degrees to rotate the hue.
+     * @returns {Number} The rotated hue.
+     */
+    static rotateHue(hue, degrees) {
+        hue += degrees;
+        while (360.0 <= hue) hue -= 360.0;
+        while (0 > hue) hue += 360.0;
+        return hue;
+    }
+
+    /**
+     * Returns an array containing a complementary color scheme based on the provided color.
+     *
+     * @param {Color} color: A color.
+     * @returns {Color[]} The complementary color scheme based on the provided color.
+     * @see http://www.tigercolor.com/color-lab/color-theory/color-theory-intro.htm
+     */
+    static getComplimentaryColorScheme(color) {
+        let scheme = [ color ];
+        let color255 = Color.get255Color(color);
+        let hsl = Color.xlateRGB255ToHSL360(color255.r, color255.g, color255.b)
+        let rotatedHue = Color.rotateHue(hsl[0], 180);
+        let rgb = Color.xlateHSL360ToRGB255(rotatedHue, hsl[1], hsl[2]);
+        let complimentaryColor = new Color(rgb[0], rgb[1], rgb[2], color.a, color.transparent, false);
+        scheme.push(complimentaryColor);
+        return scheme;
+    }
+
+    /**
+     * Returns an array containing a split complementary color scheme based on the provided color.
+     *
+     * @param {Color} color: A color.
+     * @returns {Color[]} The split complementary color scheme based on the provided color.
+     * @see http://www.tigercolor.com/color-lab/color-theory/color-theory-intro.htm
+     */
+    static getSplitComplimentaryColorScheme(color) {
+        let scheme = [ color ];
+        let color255 = Color.get255Color(color);
+        let hsl = Color.xlateRGB255ToHSL360(color255.r, color255.g, color255.b)
+        let rotatedHue = Color.rotateHue(hsl[0], 150);
+        let rgb = Color.xlateHSL360ToRGB255(rotatedHue, hsl[1], hsl[2]);
+        scheme.push(new Color(rgb[0], rgb[1], rgb[2], color.a, color.transparent, false));
+        rotatedHue = Color.rotateHue(hsl[0], 210);
+        rgb = Color.xlateHSL360ToRGB255(rotatedHue, hsl[1], hsl[2]);
+        scheme.push(new Color(rgb[0], rgb[1], rgb[2], color.a, color.transparent, false));
+        return scheme;
+    }
+
+    /**
+     * Returns an array containing a triad color scheme based on the provided color.
+     *
+     * @param {Color} color: A color.
+     * @returns {Color[]} The triad color scheme based on the provided color.
+     * @see http://www.tigercolor.com/color-lab/color-theory/color-theory-intro.htm
+     */
+    static getTriadColorScheme(color) {
+        let scheme = [ color ];
+        let color255 = Color.get255Color(color);
+        let hsl = Color.xlateRGB255ToHSL360(color255.r, color255.g, color255.b)
+        let rotatedHue = Color.rotateHue(hsl[0], 120);
+        let rgb = Color.xlateHSL360ToRGB255(rotatedHue, hsl[1], hsl[2]);
+        scheme.push(new Color(rgb[0], rgb[1], rgb[2], color.a, color.transparent, false));
+        rotatedHue = Color.rotateHue(hsl[0], 240);
+        rgb = Color.xlateHSL360ToRGB255(rotatedHue, hsl[1], hsl[2]);
+        scheme.push(new Color(rgb[0], rgb[1], rgb[2], color.a, color.transparent, false));
+        return scheme;
+    }
+
+    /**
+     * Returns an array containing an analogous color scheme based on the provided color.
+     *
+     * @param {Color} color: A color.
+     * @returns {Color[]} The analogous color scheme based on the provided color.
+     * @see http://www.tigercolor.com/color-lab/color-theory/color-theory-intro.htm
+     */
+    static getAnalogousColorScheme(color) {
+        let scheme = [ color ];
+        let color255 = Color.get255Color(color);
+        let hsl = Color.xlateRGB255ToHSL360(color255.r, color255.g, color255.b)
+        let rotatedHue = Color.rotateHue(hsl[0], 30);
+        let rgb = Color.xlateHSL360ToRGB255(rotatedHue, hsl[1], hsl[2]);
+        scheme.push(new Color(rgb[0], rgb[1], rgb[2], color.a, color.transparent, false));
+        rotatedHue = Color.rotateHue(hsl[0], -30);
+        rgb = Color.xlateHSL360ToRGB255(rotatedHue, hsl[1], hsl[2]);
+        scheme.push(new Color(rgb[0], rgb[1], rgb[2], color.a, color.transparent, false));
+        return scheme;
+    }
+
+    /**
+     * Returns an array containing an rectangle (tetradic) color scheme based on the provided color.
+     *
+     * @param {Color} color: A color.
+     * @returns {Color[]} The rectangle color scheme based on the provided color.
+     * @see http://www.tigercolor.com/color-lab/color-theory/color-theory-intro.htm
+     */
+    static getRectangleColorScheme(color) {
+        let scheme = Color.getComplimentaryColorScheme(color);
+        let color255 = Color.get255Color(color);
+        let hsl = Color.xlateRGB255ToHSL360(color255.r, color255.g, color255.b)
+        let rotatedHue = Color.rotateHue(hsl[0], 120);
+        let rgb = Color.xlateHSL360ToRGB255(rotatedHue, hsl[1], hsl[2]);
+        scheme.push(new Color(rgb[0], rgb[1], rgb[2], color.a, color.transparent, false));
+        rotatedHue = Color.rotateHue(hsl[0], -60);
+        rgb = Color.xlateHSL360ToRGB255(rotatedHue, hsl[1], hsl[2]);
+        scheme.push(new Color(rgb[0], rgb[1], rgb[2], color.a, color.transparent, false));
+        return scheme;
+    }
+
+    /**
+     * Returns an array containing an square color scheme based on the provided color.
+     *
+     * @param {Color} color: A color.
+     * @returns {Color[]} The square color scheme based on the provided color.
+     * @see http://www.tigercolor.com/color-lab/color-theory/color-theory-intro.htm
+     */
+    static getSquareColorScheme(color) {
+        let scheme = Color.getComplimentaryColorScheme(color);
+        let color255 = Color.get255Color(color);
+        let hsl = Color.xlateRGB255ToHSL360(color255.r, color255.g, color255.b)
+        let rotatedHue = Color.rotateHue(hsl[0], 90);
+        let rgb = Color.xlateHSL360ToRGB255(rotatedHue, hsl[1], hsl[2]);
+        scheme.push(new Color(rgb[0], rgb[1], rgb[2], color.a, color.transparent, false));
+        rotatedHue = Color.rotateHue(hsl[0], -90);
+        rgb = Color.xlateHSL360ToRGB255(rotatedHue, hsl[1], hsl[2]);
+        scheme.push(new Color(rgb[0], rgb[1], rgb[2], color.a, color.transparent, false));
+        return scheme;
     }
 
     /**
@@ -602,23 +752,5 @@ export default class Color {
         if (this.transparent) return 'transparent';
         let color = Color.get255Color(this);
         return Color.xlateRGB255ToHex(color.r, color.g, color.b);
-    }
-
-    getDarkerColor(divisor) {
-        let div = ((divisor)? divisor : 2 );
-        let color255 = Color.get255Color(this);
-        let hsl = Color.xlateRGB255ToHSL360(color255.r, color255.g, color255.b);
-        let l = Math.round(hsl[2] / div);
-        let rgb = Color.xlateHSL360ToRGB255( hsl[0], hsl[1], l );
-        return new Color( rgb[0], rgb[1], rgb[2] );
-    }
-
-    getLighterColor(multiplier) {
-        let mul = ((multiplier)? multiplier : 0.5 );
-        let color255 = Color.get255Color(this);
-        let hsl = Color.xlateRGB255ToHSL360(color255.r, color255.g, color255.b);
-        let l = Math.min(100, hsl[2] + Math.round(hsl[2] * mul));
-        let rgb = Color.xlateHSL360ToRGB255( hsl[0], hsl[1], l );
-        return new Color( rgb[0], rgb[1], rgb[2] );
     }
 }
