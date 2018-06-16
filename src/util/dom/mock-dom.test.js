@@ -15,7 +15,7 @@ class ReactComponentForTesting extends React.Component {
                 id='MockDOMTest'
                 className='testCSS'
                 key='MY_KEY'
-                myProp='MyPropValue'
+                my_prop='MyPropValue'
                 onClick={() => { this.buttonClicked(); }}
             >
                 TESTING
@@ -146,7 +146,7 @@ describe( 'As a developer, I need mock DOM elements for testing.', function() {
         expect(div.children[1].attributes[0].value).toBe('MockDOMTest');
         expect(div.children[1].attributes[1].name).toBe('class');
         expect(div.children[1].attributes[1].value).toBe('testCSS');
-        expect(div.children[1].attributes[2].name).toBe('myProp');
+        expect(div.children[1].attributes[2].name).toBe('my_prop');
         expect(div.children[1].attributes[2].value).toBe('MyPropValue');
         expect(div.children[1].onClick).not.toBeUndefined;
         expect(div.children[1].ownerDocument).toBe(document);
