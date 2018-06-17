@@ -4,6 +4,7 @@ import Color from './color';
 
 describe( 'As a developer, I need to be able to work with colors.', function() {
     beforeAll(() => {
+        console.log('BEGIN COLOR TEST ===========================================');
     });
     beforeEach(() => {
     });

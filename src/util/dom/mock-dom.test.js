@@ -27,6 +27,7 @@ class ReactComponentForTesting extends React.Component {
 
 describe( 'As a developer, I need mock DOM elements for testing.', function() {
     beforeAll(() => {
+        console.log('BEGIN MOCK DOM TEST ===========================================');
     });
     beforeEach(() => {
     });

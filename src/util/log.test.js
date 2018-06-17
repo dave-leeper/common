@@ -17,6 +17,7 @@ let config = {
 
 describe( 'As a developer, I need to be able to log information.', function() {
     beforeAll(() => {
+        console.log('BEGIN LOG TEST ===========================================');
     });
     beforeEach(() => {
     });

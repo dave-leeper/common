@@ -7,6 +7,7 @@ import Log from "../log";
 
 describe( 'As a developer, I need to retrieve elements from within a DOM tree based on a path specified by text.', function() {
     beforeAll(() => {
+        console.log('BEGIN DOM TRAVERSAL TEST ===========================================');
     });
     beforeEach(() => {
     });

@@ -7,6 +7,7 @@ import Messages from '../messages'
 
 describe( 'As a developer, I need a data object', function() {
     beforeAll(() => {
+        console.log('BEGIN CACHE TEST ===========================================');
     });
     beforeEach(() => {
     });

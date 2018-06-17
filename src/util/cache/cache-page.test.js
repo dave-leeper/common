@@ -5,6 +5,7 @@ import Queue from "../queue";
 
 describe( 'As a developer, I need to object a page of information', function() {
     beforeAll(() => {
+        console.log('BEGIN CACHE PAGE TEST ===========================================');
     });
     beforeEach(() => {
     });

@@ -5,6 +5,7 @@ import Cache from './cache/cache'
 
 describe( 'As a developer, I need to work with multiple object controllers in a single application', function() {
     beforeAll(() => {
+        console.log('BEGIN REGISTRY TEST ===========================================');
     });
     beforeEach(() => {
     });

@@ -6,6 +6,7 @@ import Log from "./log";
 
 describe( 'As a developer, I need to send and receive messages using a queue.', function() {
     beforeAll(() => {
+        console.log('BEGIN QUEUE TEST ===========================================');
     });
     beforeEach(() => {
     });
