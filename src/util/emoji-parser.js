@@ -1,4 +1,4 @@
-
+// https://github.com/iamcal/js-emojis
 export default class EmojiParsingService {
     static REGEX_HTML_EMOJI = /&#x(?:[0-9A-Fa-f]){5}/;
     static REGEX_HTML_EMOJI2 = /&#(?:[0-9A-Fa-f]){4,5};/;

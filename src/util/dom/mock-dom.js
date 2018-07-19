@@ -3,7 +3,7 @@ export class MockClassList {
     classes = [];
     add() {
         for (let loop = 0; loop < arguments.length; loop++) {
-            let className = arguments[loop];
+            let className = arguments['' + loop];
             if (!this.contains(className)) this.classes.push(className);
         }
     }
@@ -21,9 +21,11 @@ export class MockClassList {
         return null;
     }
     remove() {
-        for (let loop = arguments.length - 1; loop >= 0; loop--) {
-            let className = arguments[loop];
-            if (!this.contains(className)) this.classes.splice(loop, 1);
+        for (let loop1 = arguments.length - 1; loop1 >= 0; loop1--) {
+            let className = arguments['' + loop1];
+            for (let loop2 = this.classes.length -1; loop2 >= 0; loop2--) {
+                if (className === this.classes[loop2]) this.classes.splice(loop2, 1);
+            }
         }
     }
     toggle(className, force) {
@@ -33,6 +35,55 @@ export class MockClassList {
         else this.add(className);
     }
 }
+export class MockCanvasContext {
+    constructor() {
+        this.reset();
+    }
+    reset() {
+        this.moveToParams = [];
+        this.lineToParams = [];
+        this.arcParams = [];
+        this.fillTextParams = [];
+        this.strokeTextParams = [];
+        this.createLinearGradientParams = [];
+        this.createRadialGradientParams = [];
+        this.addColorStopParams = [];
+        this.fillRectParams = [];
+        this.drawImageParams = [];
+        this.fillStyle = null;
+    }
+    moveTo(x, y) { this.moveToParams.push({ x: x, y: y }); }
+    lineTo(x, y) { this.lineToParams.push({ x: x, y: y }); }
+    stroke(){}
+    beginPath(){}
+    arc(x, y, r, sAngle, eAngle, counterclockwise){ this.arcParams.push({ x: x, y: y, r: r, sAngle: sAngle, eAngle: eAngle, counterclockwise: counterclockwise }); }
+    fillText(text, x, y) { this.fillTextParams.push({ text: text, x: x, y: y }); }
+    strokeText(text, x, y) { this.strokeTextParams.push({ text: text, x: x, y: y }); }
+    createLinearGradient(x0, y0, x1, y1){ this.createLinearGradientParams.push({ x0: x0, y0: y0, x1: x1, y1: y1 }); }
+    createRadialGradient(x0, y0, r0, x1, y1, r1){ this.createRadialGradientParams.push({ x0: x0, y0: y0, r0: r0, x1: x1, y1: y1, r1: r1 }); }
+    addColorStop(stop, color) { this.addColorStopParams.push({ stop: stop, color: color }); }
+    fillRect(x, y, width, height) { this.fillRectParams.push({ x: x, y: y, width: width, height: height }); }
+    drawImage(img, x, y) { this.drawImageParams.push({ img: img, x: x, y: y }); }
+    getImageData(x, y, width, height) {
+        let result = { data: [ ]};
+        for (let xLoop = x; xLoop < x + width; xLoop++) {
+            for (let yLoop = y; yLoop < y + height; yLoop++) {
+                result.data.push(0);
+                result.data.push(0);
+                result.data.push(0);
+                result.data.push(0);
+            }
+        }
+        return result;
+    }
+}
+let canvasContext =  new MockCanvasContext();
+let decorate = (mockDOMElement) => {
+    if (!mockDOMElement || !mockDOMElement.tagName) return;
+    if ('CANVAS' === mockDOMElement.tagName.toUpperCase()) {
+        mockDOMElement.getContext = (mode) => { return canvasContext; };
+    }
+};
 // https://developer.mozilla.org/en-US/docs/Web/API/Element
 export class MockDOMElement {
     constructor(tag) {
@@ -44,6 +95,7 @@ export class MockDOMElement {
         this.style = {};
         this.attributes = [];
         this.eventListeners = [];
+        decorate(this);
         // https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeType
         this.nodeType = 1;
     }
@@ -84,6 +136,17 @@ export class MockDOMElement {
         return results;
     }
     setAttribute(name, value) {
+        if ('id' === name.toLowerCase()) {
+            this.id = value;
+            return;
+        }
+        if (('class' === name.toLowerCase()) || ('className' === name.toLowerCase())) {
+            let classes = value.split(/(\s+)/);
+            for (let loop = 0; loop < classes.length; loop++) {
+                this.classList.add(classes[loop]);
+            }
+            return;
+        }
         this.removeAttribute(name);
         if ((null === value) || (undefined === value)) return;
         this.attributes.push({ name: name, value: value });
@@ -103,7 +166,9 @@ export class MockDOMElement {
         for (let loop = 0; loop < indent; loop++) summary += '\t';
         summary += 'id: ' + this.id;
         summary += ', tagName: ' + this.tagName;
-        summary += ', classList: ' + JSON.stringify(this.classList) + '\n';
+        summary += ', classList: ' + JSON.stringify(this.classList);
+        if (this.attributes.length) summary += ', attributes: ' + JSON.stringify(this.attributes);
+        summary += '\n';
         for (let loop = 0; loop < this.children.length; loop++) {
             summary += this.children[loop].summary(indent + 1);
         }
