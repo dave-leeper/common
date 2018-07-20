@@ -1,18 +1,16 @@
 const ERROR_END = 'End of input.';
+const ERROR_EXPRESSION_NOT_SET = 'Expression not set.';
+const ERROR_EXPRESSIONS_NOT_SET = 'Expressions not set.';
 const ERROR_DOES_NOT_MATCH = 'Does not match.';
-const ERROR_STRING_EXPRESION_NO_OPENING_QUOTE = 'No opening quote.';
-const ERROR_STRING_EXPRESION_NO_CLOSING_QUOTE = 'No closing quote.';
-const ERROR_STRING_EXPRESION_INVALID_ESCAPE_SEQUENCE = 'Invalid escape sequence.';
-const ERROR_LITERAL_EXPRESION_NOT_SET = 'Literal not set.';
-const ERROR_CHARACTER_SEQUENCE_EXPRESION_FIRST_CHARACTER_SEQUENCE_NOT_SET = 'First character sequence not set.';
-const ERROR_CHARACTER_SEQUENCE_EXPRESION_REMAINING_CHARACTER_SEQUENCE_NOT_SET = 'Remaining character sequence not set.';
-const ERROR_CHARACTER_SEQUENCE_EXPRESION_INVALID_FIRST_CHARACTER = 'Invalid first character.';
-const ERROR_EXPRESSION_SEQUENCE_EXPRESION_EXPRESSIONS_NOT_SET = 'Expressions not set.';
-const ERROR_EXPRESSION_SEQUENCE_EXPRESION_EXPRESSION_DID_NOT_MATCH = 'Expression did not match.';
-const ERROR_ALTERNATIVE_EXPRESION_EXPRESSIONS_NOT_SET = 'Expressions not set.';
-const ERROR_ALTERNATIVE_EXPRESION_NO_EXPRESSIONS_MATCHED = 'No expressions matched.';
-const ERROR_REPEATING_EXPRESION_EXPRESSION_NOT_SET = 'Expression not set.';
-const ERROR_REPEATING_EXPRESION_DID_NOT_MATCH_ENOUGH_TIMES = 'Did not match enough times.';
+const ERROR_STRING_EXPRESSION_NO_OPENING_QUOTE = 'No opening quote.';
+const ERROR_STRING_EXPRESSION_NO_CLOSING_QUOTE = 'No closing quote.';
+const ERROR_STRING_EXPRESSION_INVALID_ESCAPE_SEQUENCE = 'Invalid escape sequence.';
+const ERROR_LITERAL_EXPRESSION_NOT_SET = 'Literal not set.';
+const ERROR_CHARACTER_SEQUENCE_EXPRESSION_FIRST_CHARACTER_SEQUENCE_NOT_SET = 'First character sequence not set.';
+const ERROR_CHARACTER_SEQUENCE_EXPRESSION_REMAINING_CHARACTER_SEQUENCE_NOT_SET = 'Remaining character sequence not set.';
+const ERROR_CHARACTER_SEQUENCE_EXPRESSION_INVALID_FIRST_CHARACTER = 'Invalid first character.';
+const ERROR_ALTERNATIVE_EXPRESSION_NO_EXPRESSIONS_MATCHED = 'No expressions matched.';
+const ERROR_REPEATING_EXPRESSION_DID_NOT_MATCH_ENOUGH_TIMES = 'Did not match enough times.';
 
 export class ParserError {
     constructor(error, parserInput, expression) {
@@ -104,7 +102,7 @@ export class StringExpression extends Expression {
         let count = 0;
         let char = input.get();
         let matched = false;
-        if (this.quoteCharacter !== char) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_STRING_EXPRESION_NO_OPENING_QUOTE, this));
+        if (this.quoteCharacter !== char) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_STRING_EXPRESSION_NO_OPENING_QUOTE, this));
 
         while (!input.end()) {
             char = input.get();
@@ -114,12 +112,12 @@ export class StringExpression extends Expression {
             }
             if (this.escapeCharacter === char) {
                 char = input.get();
-                if (-1 === char) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_STRING_EXPRESION_INVALID_ESCAPE_SEQUENCE, this));
+                if (-1 === char) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_STRING_EXPRESSION_INVALID_ESCAPE_SEQUENCE, this));
             }
             str += char;
             count++;
         }
-        if (false === matched) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_STRING_EXPRESION_NO_CLOSING_QUOTE, this));
+        if (false === matched) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_STRING_EXPRESSION_NO_CLOSING_QUOTE, this));
         return new ParseResult(this, input.loc, count, str, true);
     }
 }
@@ -133,7 +131,7 @@ export class LiteralExpression extends Expression {
     expressionName(){ return 'LiteralExpression'; }
     parse(input) {
         if (input.end()) return new ParseResult(this, input.loc, -1, null, false, input.getError(ERROR_END, this));
-        if ((!this.literal) || (0 === this.literal.length)) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_LITERAL_EXPRESION_NOT_SET, this));
+        if ((!this.literal) || (0 === this.literal.length)) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_LITERAL_EXPRESSION_NOT_SET, this));
         super.reset();
         let str = '';
         let char;
@@ -181,13 +179,13 @@ export class CharacterSequence extends Expression {
     expressionName(){ return 'CharacterSequence'; }
     parse(input) {
         if (input.end()) return new ParseResult(this, input.loc, -1, null, false, input.getError(ERROR_END, this));
-        if ((!this.validFirstCharacters) || (0 === this.validFirstCharacters.length)) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_CHARACTER_SEQUENCE_EXPRESION_FIRST_CHARACTER_SEQUENCE_NOT_SET, this));
-        if ((!this.validRemainingCharacters) || (0 === this.validRemainingCharacters.length)) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_CHARACTER_SEQUENCE_EXPRESION_REMAINING_CHARACTER_SEQUENCE_NOT_SET, this));
+        if ((!this.validFirstCharacters) || (0 === this.validFirstCharacters.length)) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_CHARACTER_SEQUENCE_EXPRESSION_FIRST_CHARACTER_SEQUENCE_NOT_SET, this));
+        if ((!this.validRemainingCharacters) || (0 === this.validRemainingCharacters.length)) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_CHARACTER_SEQUENCE_EXPRESSION_REMAINING_CHARACTER_SEQUENCE_NOT_SET, this));
         super.reset();
         let str = '';
         let char = input.get();
         let count = 0;
-        if (-1 === this.validFirstCharacters.indexOf(char)) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_CHARACTER_SEQUENCE_EXPRESION_INVALID_FIRST_CHARACTER, this));
+        if (-1 === this.validFirstCharacters.indexOf(char)) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_CHARACTER_SEQUENCE_EXPRESSION_INVALID_FIRST_CHARACTER, this));
         str += char;
         count++;
 
@@ -231,7 +229,7 @@ export class ExpressionSequence extends Expression
     }
     parse(input) {
         if (input.end()) return new ParseResult(this, input.loc, -1, null, false, input.getError(ERROR_END, this));
-        if ((!this.expressions) || (0 === this.expressions.length)) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_EXPRESSION_SEQUENCE_EXPRESION_EXPRESSIONS_NOT_SET, this));
+        if ((!this.expressions) || (0 === this.expressions.length)) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_EXPRESSIONS_NOT_SET, this));
         super.reset();
         let loc = input.loc;
         let line = input.line;
@@ -255,7 +253,7 @@ export class ExpressionSequence extends Expression
                 input.linePosition = linePosition;
             }
             if ((0 === count) && (false === result.matched)) {
-                return new ParseResult(this, input.loc, 0, str, false, input.getError(ERROR_EXPRESSION_SEQUENCE_EXPRESION_EXPRESSION_DID_NOT_MATCH, this), children);
+                return new ParseResult(this, input.loc, 0, str, false, input.getError(ERROR_DOES_NOT_MATCH, this), children);
                 input.loc = loc;
                 input.line = line;
                 input.linePosition = linePosition;
@@ -292,7 +290,7 @@ export class AlternativeExpression extends Expression {
     }
     parse(input) {
         if (input.end()) return new ParseResult(this, input.loc, -1, null, false, input.getError(ERROR_END, this));
-        if ((!this.expressions) || (0 === this.expressions.length)) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_ALTERNATIVE_EXPRESION_EXPRESSIONS_NOT_SET, this));
+        if ((!this.expressions) || (0 === this.expressions.length)) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_EXPRESSIONS_NOT_SET, this));
         super.reset();
         let loc = input.loc;
         let line = input.line;
@@ -324,7 +322,7 @@ export class AlternativeExpression extends Expression {
             matchedChildren = [ result ];
         }
         if (!matched) {
-            let error = new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_ALTERNATIVE_EXPRESION_NO_EXPRESSIONS_MATCHED, this), children);
+            let error = new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_ALTERNATIVE_EXPRESSION_NO_EXPRESSIONS_MATCHED, this), children);
             input.loc = loc;
             input.line = line;
             input.linePosition = linePosition;
@@ -361,7 +359,7 @@ export class RepeatingExpression extends Expression
     expressionName(){ return 'RepeatingExpression'; }
     parse(input) {
         if (input.end()) return new ParseResult(this, input.loc, -1, null, false, input.getError(ERROR_END, this));
-        if (!this.expression) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_REPEATING_EXPRESION_EXPRESSION_NOT_SET, this));
+        if (!this.expression) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_EXPRESSION_NOT_SET, this));
         super.reset();
         let str = '';
         let totalCount = 0;
@@ -396,12 +394,65 @@ export class RepeatingExpression extends Expression
         if (matchCount >= this.minimumRequired) {
             matched = true;
         } else {
-            let error = new ParseResult(this, input.loc, totalCount, str, false, input.getError(ERROR_REPEATING_EXPRESION_DID_NOT_MATCH_ENOUGH_TIMES, this), children);
+            let error = new ParseResult(this, input.loc, totalCount, str, false, input.getError(ERROR_REPEATING_EXPRESSION_DID_NOT_MATCH_ENOUGH_TIMES, this), children);
             input.loc = loc;
             input.line = line;
             input.linePosition = linePosition;
             return error;
         }
         return new ParseResult(this, input.loc, totalCount, str, matched, null, matchedChildren);
+    }
+}
+
+/**
+ * UntilExpression
+ * Consumes characters until a given expression is found.
+ */
+export class UntilExpression extends Expression
+{
+    constructor(expression) {
+        super();
+        this.reset(expression);
+    }
+    reset(expression) {
+        super.reset();
+        this.expression = expression;
+    }
+    expressionName(){ return 'UntilExpression'; }
+    parse(input) {
+        if (input.end()) return new ParseResult(this, input.loc, -1, null, false, input.getError(ERROR_END, this));
+        if (!this.expression) return new ParseResult(this, input.loc, 0, null, false, input.getError(ERROR_EXPRESSION_NOT_SET, this));
+        super.reset();
+        let str = '';
+        let matched = false;
+        let children = [];
+        let loc = input.loc;
+        let line = input.line;
+        let linePosition = input.linePosition;
+
+        while (!input.end()) {
+            let markerLoc = input.loc;
+            let markerLine = input.line;
+            let markerLinePosition = input.linePosition;
+            let result = this.expression.parse(input);
+            input.loc = markerLoc;
+            input.line = markerLine;
+            input.linePosition = markerLinePosition;
+            if (result.matched) {
+                children.push(result);
+                break;
+            }
+            str += input.get();
+        }
+        if (0 < str.length) {
+            matched = true;
+        } else {
+            let error = new ParseResult(this, input.loc, 0, str, false, input.getError(ERROR_DOES_NOT_MATCH, this), children);
+            input.loc = loc;
+            input.line = line;
+            input.linePosition = linePosition;
+            return error;
+        }
+        return new ParseResult(this, input.loc, str.length, str, matched, null, children);
     }
 }

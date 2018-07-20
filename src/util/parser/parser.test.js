@@ -3,6 +3,7 @@
 import { ParserInput, ParseResult, AlternativeExpression, ParserError} from './parser'
 import { Expression, StringExpression, LiteralExpression } from './parser'
 import { CharacterSequence, ExpressionSequence, RepeatingExpression } from './parser'
+import { UntilExpression } from './parser'
 
 describe( 'As a developer, I need to work with parsing tools', function() {
     beforeAll(() => {
@@ -469,6 +470,18 @@ describe( 'As a developer, I need to work with parsing tools', function() {
         expect(result.children[11].data).toEqual(null);
         expect(result.children[12].data).toEqual(';');
     });
+    it ( 'should provide an expression that matches until another expression is encountered', (  ) => {
+        let expression = new LiteralExpression('<');
+        let until_expression = new UntilExpression( expression );
+        expect(until_expression.expression).toEqual(expression);
+        let result = until_expression.parse(new ParserInput('big<', 0));
+        expect(result.loc).toEqual(3);
+        expect(result.count).toEqual(3);
+        expect(result.data).toEqual('big');
+        expect(result.matched).toEqual(true);
+        expect(result.children.length).toEqual(1);
+        expect(result.children[0].data).toEqual('<');
+    });
     it ( 'should provide provide useful error messages', (  ) => {
         let str = 'ABCDEFG';
         let error = 'End of input.';
@@ -688,7 +701,7 @@ describe( 'As a developer, I need to work with parsing tools', function() {
         expect(result.count).toEqual(0);
         expect(result.data).toEqual('TE?');
         expect(result.matched).toEqual(false);
-        expect(result.error.error).toEqual('Expression did not match.');
+        expect(result.error.error).toEqual('Does not match.');
         expect(result.error.expression).toEqual(expression);
         expect(result.error.loc).toEqual(3);
         expect(result.error.line).toEqual(0);
@@ -782,6 +795,43 @@ describe( 'As a developer, I need to work with parsing tools', function() {
         expect(result.children[2].data).toEqual('TEXT');
         expect(result.children[3].data).toEqual(null);
         expect(result.children[3].error.expression).toEqual(literalExpression);
+
+        parserInput = new ParserInput('', 0);
+        expression = new UntilExpression();
+        result = expression.parse(parserInput);
+        expect(result.loc).toEqual(0);
+        expect(result.count).toEqual(-1);
+        expect(result.data).toEqual(null);
+        expect(result.matched).toEqual(false);
+        expect(result.error.error).toEqual('End of input.');
+        expect(result.error.expression).toEqual(expression);
+        expect(result.error.loc).toEqual(0);
+        expect(result.error.line).toEqual(0);
+        expect(result.error.linePosition).toEqual(0);
+
+        parserInput = new ParserInput('TEXT', 0);
+        result = expression.parse(parserInput);
+        expect(result.loc).toEqual(0);
+        expect(result.count).toEqual(0);
+        expect(result.data).toEqual(null);
+        expect(result.matched).toEqual(false);
+        expect(result.error.error).toEqual('Expression not set.');
+        expect(result.error.expression).toEqual(expression);
+        expect(result.error.loc).toEqual(0);
+        expect(result.error.line).toEqual(0);
+        expect(result.error.linePosition).toEqual(0);
+
+        expression = new UntilExpression(literalExpression);
+        result = expression.parse(parserInput);
+        expect(result.loc).toEqual(0);
+        expect(result.count).toEqual(0);
+        expect(result.data).toEqual(null);
+        expect(result.matched).toEqual(false);
+        expect(result.error.error).toEqual('Does not match.');
+        expect(result.error.expression).toEqual(expression);
+        expect(result.error.loc).toEqual(0);
+        expect(result.error.line).toEqual(0);
+        expect(result.error.linePosition).toEqual(0);
     });
 });
 
