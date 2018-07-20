@@ -61,16 +61,16 @@ describe( 'As a developer, I need to render a canvas in React.', function() {
         let canvasDOM = document.getElementById('ID');
         canvas.setCanvasDOMElement(canvasDOM);
         let canvasContext = canvas.getContext();
-        expect(canvasContext.moveTo).not.toBeUndefined;
-        expect(canvasContext.lineTo).not.toBeUndefined;
-        expect(canvasContext.arc).not.toBeUndefined;
-        expect(canvasContext.fillText).not.toBeUndefined;
-        expect(canvasContext.strokeText).not.toBeUndefined;
-        expect(canvasContext.createLinearGradient).not.toBeUndefined;
-        expect(canvasContext.createRadialGradient).not.toBeUndefined;
-        expect(canvasContext.addColorStop).not.toBeUndefined;
-        expect(canvasContext.fillRect).not.toBeUndefined;
-        expect(canvasContext.drawImage).not.toBeUndefined;
+        expect(canvasContext.moveTo).not.toBeUndefined();
+        expect(canvasContext.lineTo).not.toBeUndefined();
+        expect(canvasContext.arc).not.toBeUndefined();
+        expect(canvasContext.fillText).not.toBeUndefined();
+        expect(canvasContext.strokeText).not.toBeUndefined();
+        expect(canvasContext.createLinearGradient).not.toBeUndefined();
+        expect(canvasContext.createRadialGradient).not.toBeUndefined();
+        expect(canvasContext.addColorStop).not.toBeUndefined();
+        expect(canvasContext.fillRect).not.toBeUndefined();
+        expect(canvasContext.drawImage).not.toBeUndefined();
     });
     it ( 'should be able to set and get pixel colors', (  ) => {
         let document = MockDOM.getTestingHTMLDOM();

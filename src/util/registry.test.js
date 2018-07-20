@@ -26,10 +26,10 @@ describe( 'As a developer, I need to work with multiple object controllers in a 
         expect(Registry.isRegistered("B")).toBe(true);
         expect(r).toBe(a);
         r = Registry.unregister("A");
-        expect(r).toBeNull;
+        expect(r).toBeNull();
         Registry.unregisterAll();
         expect(Registry.isRegistered("B")).toBe(false);
-        expect(Registry.get("B")).toBeNull;
+        expect(Registry.get("B")).toBeNull();
     });
 });
 

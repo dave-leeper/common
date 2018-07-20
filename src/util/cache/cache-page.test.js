@@ -23,7 +23,7 @@ describe( 'As a developer, I need to object a page of information', function() {
         expect(cachePage.data).toBe(data);
         expect(cachePage.pageNumber).toBe(pageNumber);
         expect(cachePage.lifetime).toBe(lifetime);
-        expect(cachePage.createdAt).not.toBeUndefined;
+        expect(cachePage.createdAt).not.toBeUndefined();
         expect(cachePage.createdAt).toBeLessThanOrEqual(new Date().getTime());
         expect(cachePage.hasData()).toBe(true);
     });

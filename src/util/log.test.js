@@ -33,10 +33,10 @@ describe( 'As a developer, I need to be able to log information.', function() {
         Log.configure(config);
         Log.info("TEST DATA");
         const events = recording.replay(); // events is an array of LogEvent objects.
-        expect(events).not.toBeNull;
+        expect(events).not.toBeNull();
         expect(events.length).toBe(1);
         expect(events[0].categoryName).toBe('default');
-        expect(events[0].data).not.toBeNull;
+        expect(events[0].data).not.toBeNull();
         expect(events[0].data.length).toBe(1);
         expect(events[0].data[0].indexOf("TEST DATA")).not.toBe(-1);
     });

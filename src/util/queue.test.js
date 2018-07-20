@@ -28,7 +28,7 @@ describe( 'As a developer, I need to send and receive messages using a queue.', 
         expect(Queue.isRegistered(b, m)).toBe(true);
         expect(Array.isArray(r)).toBe(true);
         expect(r.length).toBe(1);
-        expect(r[0]).not.toBeNull;
+        expect(r[0]).not.toBeNull();
         expect(r[0].listener).toBe(a);
         expect(r[0].message).toBe(m);
         r = Queue.unregister(a, m);
@@ -179,15 +179,18 @@ describe( 'As a developer, I need to send and receive messages using a queue.', 
         let a = {};
         let b = {};
         let c = {};
-        Queue.register(a, Messages.NOTIFICATION, () => {});
-        Queue.register(b, Messages.NOTIFICATION, () => {});
-        Queue.register(c, Messages.NOTIFICATION, () => {});
+        Queue.register(a, Messages.NOTIFICATION, () => { return null; });
+        Queue.register(b, Messages.NOTIFICATION, () => { return null; });
+        Queue.register(c, Messages.NOTIFICATION, () => { return null; });
         Queue.call("NOTIFICATION").then((data) => {
+            let r0 = data[0];
+            let r1 = data[1];
+            let r2 = data[2];
             expect(Array.isArray(data)).toBe(true);
             expect(data.length).toBe(3);
-            expect(data[0]).toBeNull;
-            expect(data[1]).toBeNull;
-            expect(data[2]).toBeNull;
+            expect(r0 === null).toBe(true);
+            expect(r1 === null).toBe(true);
+            expect(r2 === null).toBe(true);
             done();
         })
     });
