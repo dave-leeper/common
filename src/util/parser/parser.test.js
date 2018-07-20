@@ -1,7 +1,7 @@
 //@formatter:off
 'use strict';
-import { ParserInput, ParseResult, AlternativeExpression, ParserError} from './parser'
-import { Expression, StringExpression, LiteralExpression } from './parser'
+import { ParserInput, ParserResult, ParserError, Expression } from './parser'
+import { AlternativeExpression, StringExpression, LiteralExpression } from './parser'
 import { CharacterSequence, ExpressionSequence, RepeatingExpression } from './parser'
 import { UntilExpression } from './parser'
 
@@ -112,14 +112,14 @@ describe( 'As a developer, I need to work with parsing tools', function() {
         expect(parserInput.linePosition).toEqual(1);
     });
     it ( 'should provide a class that represents the parser result', (  ) => {
-        let parseResult = new ParseResult();
+        let parseResult = new ParserResult();
         expect(parseResult.expression).toBeUndefined();
         expect(parseResult.loc).toEqual(0);
         expect(parseResult.count).toEqual(0);
         expect(parseResult.data).toBeNull();
         expect(parseResult.matched).toEqual(false);
         expect(parseResult.error).toBeUndefined();
-        parseResult = new ParseResult(CharacterSequence.NUMBER);
+        parseResult = new ParserResult(CharacterSequence.NUMBER);
         expect(parseResult.expression).toEqual(CharacterSequence.NUMBER);
         expect(parseResult.loc).toEqual(0);
         expect(parseResult.count).toEqual(0);
@@ -127,7 +127,7 @@ describe( 'As a developer, I need to work with parsing tools', function() {
         expect(parseResult.matched).toEqual(false);
         expect(parseResult.error).toBeUndefined();
         expect(parseResult.children).toBeUndefined();
-        parseResult = new ParseResult(CharacterSequence.NUMBER, 5);
+        parseResult = new ParserResult(CharacterSequence.NUMBER, 5);
         expect(parseResult.expression).toEqual(CharacterSequence.NUMBER);
         expect(parseResult.loc).toEqual(5);
         expect(parseResult.count).toEqual(0);
@@ -135,7 +135,7 @@ describe( 'As a developer, I need to work with parsing tools', function() {
         expect(parseResult.matched).toEqual(false);
         expect(parseResult.error).toBeUndefined();
         expect(parseResult.children).toBeUndefined();
-        parseResult = new ParseResult(CharacterSequence.NUMBER, 5, 6);
+        parseResult = new ParserResult(CharacterSequence.NUMBER, 5, 6);
         expect(parseResult.expression).toEqual(CharacterSequence.NUMBER);
         expect(parseResult.loc).toEqual(5);
         expect(parseResult.count).toEqual(6);
@@ -143,7 +143,7 @@ describe( 'As a developer, I need to work with parsing tools', function() {
         expect(parseResult.matched).toEqual(false);
         expect(parseResult.error).toBeUndefined();
         expect(parseResult.children).toBeUndefined();
-        parseResult = new ParseResult(CharacterSequence.NUMBER, 5, 6, 'DATA');
+        parseResult = new ParserResult(CharacterSequence.NUMBER, 5, 6, 'DATA');
         expect(parseResult.expression).toEqual(CharacterSequence.NUMBER);
         expect(parseResult.loc).toEqual(5);
         expect(parseResult.count).toEqual(6);
@@ -151,7 +151,7 @@ describe( 'As a developer, I need to work with parsing tools', function() {
         expect(parseResult.matched).toEqual(false);
         expect(parseResult.error).toBeUndefined();
         expect(parseResult.children).toBeUndefined();
-        parseResult = new ParseResult(CharacterSequence.NUMBER, 5, 6, 'DATA', true);
+        parseResult = new ParserResult(CharacterSequence.NUMBER, 5, 6, 'DATA', true);
         expect(parseResult.expression).toEqual(CharacterSequence.NUMBER);
         expect(parseResult.loc).toEqual(5);
         expect(parseResult.count).toEqual(6);
@@ -159,7 +159,7 @@ describe( 'As a developer, I need to work with parsing tools', function() {
         expect(parseResult.matched).toEqual(true);
         expect(parseResult.error).toBeUndefined();
         expect(parseResult.children).toBeUndefined();
-        parseResult = new ParseResult(CharacterSequence.NUMBER, 5, 6, 'DATA', true, 'ERROR');
+        parseResult = new ParserResult(CharacterSequence.NUMBER, 5, 6, 'DATA', true, 'ERROR');
         expect(parseResult.expression).toEqual(CharacterSequence.NUMBER);
         expect(parseResult.loc).toEqual(5);
         expect(parseResult.count).toEqual(6);
@@ -167,7 +167,7 @@ describe( 'As a developer, I need to work with parsing tools', function() {
         expect(parseResult.matched).toEqual(true);
         expect(parseResult.error).toEqual('ERROR');
         expect(parseResult.children).toBeUndefined();
-        parseResult = new ParseResult(CharacterSequence.NUMBER, 5, 6, 'DATA', true, 'ERROR', 'CHILDREN');
+        parseResult = new ParserResult(CharacterSequence.NUMBER, 5, 6, 'DATA', true, 'ERROR', 'CHILDREN');
         expect(parseResult.expression).toEqual(CharacterSequence.NUMBER);
         expect(parseResult.loc).toEqual(5);
         expect(parseResult.count).toEqual(6);
@@ -178,18 +178,18 @@ describe( 'As a developer, I need to work with parsing tools', function() {
     });
     it ( 'should provide an expression base class', (  ) => {
         let expression = new Expression();
-        expect(expression.parse(new ParserInput('ABCDEFG', 0))).toEqual(new ParseResult(expression));
+        expect(expression.parse(new ParserInput('ABCDEFG', 0))).toEqual(new ParserResult(expression));
     });
     it ( 'should provide an expression that can parse strings', (  ) => {
         let expression = new StringExpression();
         expect(expression.quoteCharacter).toEqual('"');
         expect(expression.escapeCharacter).toEqual('\\');
-        expect(expression.parse(new ParserInput('"ABCDEFG"', 0))).toEqual(new ParseResult(expression, 9, 7, 'ABCDEFG', true));
-        expect(expression.parse(new ParserInput('"ABCD\\\\EFG"', 0))).toEqual(new ParseResult(expression, 11, 8, 'ABCD\\EFG', true));
+        expect(expression.parse(new ParserInput('"ABCDEFG"', 0))).toEqual(new ParserResult(expression, 9, 7, 'ABCDEFG', true));
+        expect(expression.parse(new ParserInput('"ABCD\\\\EFG"', 0))).toEqual(new ParserResult(expression, 11, 8, 'ABCD\\EFG', true));
         expression.escapeCharacter = '?';
-        expect(expression.parse(new ParserInput('"ABCD??EFG"', 0))).toEqual(new ParseResult(expression, 11, 8, 'ABCD?EFG', true));
+        expect(expression.parse(new ParserInput('"ABCD??EFG"', 0))).toEqual(new ParserResult(expression, 11, 8, 'ABCD?EFG', true));
         expression.quoteCharacter = '`';
-        expect(expression.parse(new ParserInput('`ABCD??EFG`', 0))).toEqual(new ParseResult(expression, 11, 8, 'ABCD?EFG', true));
+        expect(expression.parse(new ParserInput('`ABCD??EFG`', 0))).toEqual(new ParserResult(expression, 11, 8, 'ABCD?EFG', true));
         let result = expression.parse(new ParserInput('`ABCD??EFG', 0));
         expect(result.loc).toEqual(10);
         expect(result.data).toEqual(null);
@@ -204,7 +204,7 @@ describe( 'As a developer, I need to work with parsing tools', function() {
     it ( 'should provide an expression that can parse literals', (  ) => {
         let expression = new LiteralExpression('ABCDEFG');
         expect(expression.literal).toEqual('ABCDEFG');
-        expect(expression.parse(new ParserInput('ABCDEFG', 0))).toEqual(new ParseResult(expression, 7, 7, 'ABCDEFG', true));
+        expect(expression.parse(new ParserInput('ABCDEFG', 0))).toEqual(new ParserResult(expression, 7, 7, 'ABCDEFG', true));
         let result = expression.parse(new ParserInput('ABEFGCD', 0));
         expect(result.loc).toEqual(3);
         expect(result.data).toEqual('ABE');
@@ -215,25 +215,25 @@ describe( 'As a developer, I need to work with parsing tools', function() {
         let expression = new CharacterSequence('ABCDEFG');
         expect(expression.validFirstCharacters).toEqual('ABCDEFG');
         expect(expression.validRemainingCharacters).toEqual('ABCDEFG');
-        expect(expression.parse(new ParserInput('ABCDEFG', 0))).toEqual(new ParseResult(expression, 7, 7, 'ABCDEFG', true));
-        expect(expression.parse(new ParserInput('ABEFGCD', 0))).toEqual(new ParseResult(expression, 7, 7, 'ABEFGCD', true));
+        expect(expression.parse(new ParserInput('ABCDEFG', 0))).toEqual(new ParserResult(expression, 7, 7, 'ABCDEFG', true));
+        expect(expression.parse(new ParserInput('ABEFGCD', 0))).toEqual(new ParserResult(expression, 7, 7, 'ABEFGCD', true));
 
         expression = new CharacterSequence('_ABCDEFG', 'ABCDEFG0123456789');
-        expect(expression.parse(new ParserInput('_ABEFG45', 0))).toEqual(new ParseResult(expression, 8, 8, '_ABEFG45', true));
+        expect(expression.parse(new ParserInput('_ABEFG45', 0))).toEqual(new ParserResult(expression, 8, 8, '_ABEFG45', true));
         let result = expression.parse(new ParserInput('9ABEFG45', 0));
         expect(result.loc).toEqual(1);
         expect(result.data).toEqual(null);
         expect(result.count).toEqual(0);
         expect(result.matched).toEqual(false);
-        expect(expression.parse(new ParserInput('_ABEFG_45', 0))).toEqual(new ParseResult(expression, 6, 6, '_ABEFG', true));
-        expect(expression.parse(new ParserInput('A   ', 0))).toEqual(new ParseResult(expression, 1, 1, 'A', true));
+        expect(expression.parse(new ParserInput('_ABEFG_45', 0))).toEqual(new ParserResult(expression, 6, 6, '_ABEFG', true));
+        expect(expression.parse(new ParserInput('A   ', 0))).toEqual(new ParserResult(expression, 1, 1, 'A', true));
 
-        expect(CharacterSequence.WHITESPACE.parse(new ParserInput('    |', 0))).toEqual(new ParseResult(CharacterSequence.WHITESPACE, 4, 4, '    ', true));
-        expect(CharacterSequence.NUMBER.parse(new ParserInput('1234|', 0))).toEqual(new ParseResult(CharacterSequence.NUMBER, 4, 4, '1234', true));
-        expect(CharacterSequence.LETTER.parse(new ParserInput('abCD|', 0))).toEqual(new ParseResult(CharacterSequence.LETTER, 4, 4, 'abCD', true));
-        expect(CharacterSequence.LOWER_CASE_LETTER.parse(new ParserInput('abcd|', 0))).toEqual(new ParseResult(CharacterSequence.LOWER_CASE_LETTER, 4, 4, 'abcd', true));
-        expect(CharacterSequence.UPPER_CASE_LETTER.parse(new ParserInput('ABCD|', 0))).toEqual(new ParseResult(CharacterSequence.UPPER_CASE_LETTER, 4, 4, 'ABCD', true));
-        expect(CharacterSequence.ALPHANUMERIC.parse(new ParserInput('Abc9|', 0))).toEqual(new ParseResult(CharacterSequence.ALPHANUMERIC, 4, 4, 'Abc9', true));
+        expect(CharacterSequence.WHITESPACE.parse(new ParserInput('    |', 0))).toEqual(new ParserResult(CharacterSequence.WHITESPACE, 4, 4, '    ', true));
+        expect(CharacterSequence.NUMBER.parse(new ParserInput('1234|', 0))).toEqual(new ParserResult(CharacterSequence.NUMBER, 4, 4, '1234', true));
+        expect(CharacterSequence.LETTER.parse(new ParserInput('abCD|', 0))).toEqual(new ParserResult(CharacterSequence.LETTER, 4, 4, 'abCD', true));
+        expect(CharacterSequence.LOWER_CASE_LETTER.parse(new ParserInput('abcd|', 0))).toEqual(new ParserResult(CharacterSequence.LOWER_CASE_LETTER, 4, 4, 'abcd', true));
+        expect(CharacterSequence.UPPER_CASE_LETTER.parse(new ParserInput('ABCD|', 0))).toEqual(new ParserResult(CharacterSequence.UPPER_CASE_LETTER, 4, 4, 'ABCD', true));
+        expect(CharacterSequence.ALPHANUMERIC.parse(new ParserInput('Abc9|', 0))).toEqual(new ParserResult(CharacterSequence.ALPHANUMERIC, 4, 4, 'Abc9', true));
     });
     it ( 'should provide an expression that can parse expression sequences', (  ) => {
         let let_expression = new LiteralExpression('let');
