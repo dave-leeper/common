@@ -11,6 +11,7 @@ const ERROR_CHARACTER_SEQUENCE_EXPRESSION_REMAINING_CHARACTER_SEQUENCE_NOT_SET =
 const ERROR_CHARACTER_SEQUENCE_EXPRESSION_INVALID_FIRST_CHARACTER = 'Invalid first character.';
 const ERROR_ALTERNATIVE_EXPRESSION_NO_EXPRESSIONS_MATCHED = 'No expressions matched.';
 const ERROR_REPEATING_EXPRESSION_DID_NOT_MATCH_ENOUGH_TIMES = 'Did not match enough times.';
+const ERROR_NESTED_EXPRESSION_MARKED_EXPRESSIONS_DO_NOT_MATCH = 'Marked expressions do not match.';
 
 export class ParserError {
     constructor(error, parserInput, expression) {
@@ -75,29 +76,16 @@ export class ParserResult {
     }
 }
 
-export class Expression {
-    constructor() { this.reset(); }
-    reset() {}
-    clone(){ return {...this}; }
-    /**
-     * Parses the expression from a string.
-     * @param input {ParserInput}: The string and current index used to parse.
-     * @return {ParserResult} Returns the ParseResult.
-     */
-    parse(input) { return new ParserResult(this, 0, 0, null, false); }
-}
-
-export class StringExpression extends Expression {
-    constructor() { super(); this.reset(); }
-    reset() {
-        super.reset();
-        this.quoteCharacter = '"';
-        this.escapeCharacter = '\\';
+export class StringExpression {
+    static EXPRESSION_NAME = 'StringExpression';
+    constructor(quote, escape) { this.reset(quote, escape); }
+    reset(quote, escape) {
+        this.quoteCharacter = quote || '"';
+        this.escapeCharacter = escape || '\\';
     }
-    expressionName(){ return 'StringExpression'; }
+    expressionName(){ return StringExpression.EXPRESSION_NAME; }
     parse(input) {
         if (input.end()) return new ParserResult(this, input.loc, -1, null, false, input.getError(ERROR_END, this));
-        super.reset();
         let str = '';
         let count = 0;
         let char = input.get();
@@ -122,17 +110,14 @@ export class StringExpression extends Expression {
     }
 }
 
-export class LiteralExpression extends Expression {
-    constructor(literal) { super(); this.reset(literal); }
-    reset(literal) {
-        super.reset();
-        this.literal = literal;
-    }
-    expressionName(){ return 'LiteralExpression'; }
+export class LiteralExpression {
+    static EXPRESSION_NAME = 'LiteralExpression';
+    constructor(literal) { this.reset(literal); }
+    reset(literal) { this.literal = literal; }
+    expressionName(){ return LiteralExpression.EXPRESSION_NAME; }
     parse(input) {
         if (input.end()) return new ParserResult(this, input.loc, -1, null, false, input.getError(ERROR_END, this));
         if ((!this.literal) || (0 === this.literal.length)) return new ParserResult(this, input.loc, 0, null, false, input.getError(ERROR_LITERAL_EXPRESSION_NOT_SET, this));
-        super.reset();
         let str = '';
         let char;
         let count = 0;
@@ -159,7 +144,8 @@ export class LiteralExpression extends Expression {
  * character has its own sequence distinct from the rest of the characters in the sequence.
  * If the second sequence is not provided, it defaults to being identical to the first.
  */
-export class CharacterSequence extends Expression {
+export class CharacterSequence {
+    static EXPRESSION_NAME = 'CharacterSequence';
     static WHITESPACE = new CharacterSequence(' \t\n\r');
     static NUMBER = new CharacterSequence('123456789');
     static LETTER = new CharacterSequence('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
@@ -167,21 +153,16 @@ export class CharacterSequence extends Expression {
     static UPPER_CASE_LETTER = new CharacterSequence('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
     static ALPHANUMERIC = new CharacterSequence('1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
 
-    constructor(validFirstCharacters, validRemainingCharacters) {
-        super();
-        this.reset(validFirstCharacters, validRemainingCharacters);
-    }
+    constructor(validFirstCharacters, validRemainingCharacters) { this.reset(validFirstCharacters, validRemainingCharacters); }
     reset(validFirstCharacters, validRemainingCharacters) {
-        super.reset();
         this.validFirstCharacters = validFirstCharacters;
         this.validRemainingCharacters = validRemainingCharacters? validRemainingCharacters : validFirstCharacters ;
     }
-    expressionName(){ return 'CharacterSequence'; }
+    expressionName(){ return CharacterSequence.EXPRESSION_NAME; }
     parse(input) {
         if (input.end()) return new ParserResult(this, input.loc, -1, null, false, input.getError(ERROR_END, this));
         if ((!this.validFirstCharacters) || (0 === this.validFirstCharacters.length)) return new ParserResult(this, input.loc, 0, null, false, input.getError(ERROR_CHARACTER_SEQUENCE_EXPRESSION_FIRST_CHARACTER_SEQUENCE_NOT_SET, this));
         if ((!this.validRemainingCharacters) || (0 === this.validRemainingCharacters.length)) return new ParserResult(this, input.loc, 0, null, false, input.getError(ERROR_CHARACTER_SEQUENCE_EXPRESSION_REMAINING_CHARACTER_SEQUENCE_NOT_SET, this));
-        super.reset();
         let str = '';
         let char = input.get();
         let count = 0;
@@ -207,30 +188,19 @@ export class CharacterSequence extends Expression {
  * ExpressionSequence
  * An expression sequence is a sequence of expressions that must appear one after the other.
  */
-export class ExpressionSequence extends Expression
-{
-    constructor(...theArgs) {
-        super();
-        this.reset(...theArgs);
-    }
+export class ExpressionSequence {
+    static EXPRESSION_NAME = 'ExpressionSequence';
+    constructor(...theArgs) { this.reset(...theArgs); }
     reset(...theArgs) {
-        super.reset();
         this.expressions = [];
         this.add(...theArgs);
     }
-    expressionName(){ return 'ExpressionSequence'; }
-    add(...theArgs) {
-        this.expressions = this.expressions.concat(theArgs);
-    }
-    remove() {
-        this.expressions = this.expressions.filter(( item ) => {
-            return 0 > arguments.indexOf( item );
-        });
-    }
+    expressionName(){ return ExpressionSequence.EXPRESSION_NAME; }
+    add(...theArgs) { this.expressions = this.expressions.concat(theArgs); }
+    remove() { this.expressions = this.expressions.filter(( item ) => { return 0 > arguments.indexOf( item ); }); }
     parse(input) {
         if (input.end()) return new ParserResult(this, input.loc, -1, null, false, input.getError(ERROR_END, this));
         if ((!this.expressions) || (0 === this.expressions.length)) return new ParserResult(this, input.loc, 0, null, false, input.getError(ERROR_EXPRESSIONS_NOT_SET, this));
-        super.reset();
         let loc = input.loc;
         let line = input.line;
         let linePosition = input.linePosition;
@@ -247,16 +217,18 @@ export class ExpressionSequence extends Expression
             count = result.count;
             if (result.data) str += result.data;
             if (-1 === count) {
-                return new ParserResult(this, input.loc, 0, str, false, input.getError(ERROR_END, this), children);
+                let parserResult = new ParserResult(this, input.loc, 0, str, false, input.getError(ERROR_END, this), children);
                 input.loc = loc;
                 input.line = line;
                 input.linePosition = linePosition;
+                return parserResult;
             }
             if ((0 === count) && (false === result.matched)) {
-                return new ParserResult(this, input.loc, 0, str, false, input.getError(ERROR_DOES_NOT_MATCH, this), children);
+                let parserResult = new ParserResult(this, input.loc, 0, str, false, input.getError(ERROR_DOES_NOT_MATCH, this), children);
                 input.loc = loc;
                 input.line = line;
                 input.linePosition = linePosition;
+                return parserResult;
             }
             totalCount += count;
             matchedChildren.push(result);
@@ -269,29 +241,19 @@ export class ExpressionSequence extends Expression
  * AlternativeExpression
  * An alternative expression is a collections of expressions where the longest match is selected.
  */
-export class AlternativeExpression extends Expression {
-    constructor(...theArgs) {
-        super();
-        this.reset(...theArgs);
-    }
+export class AlternativeExpression {
+    static EXPRESSION_NAME = 'AlternativeExpression';
+    constructor(...theArgs) { this.reset(...theArgs); }
     reset(...theArgs) {
-        super.reset();
         this.expressions = [];
         this.add(...theArgs);
     }
-    expressionName(){ return 'AlternativeExpression'; }
-    add(...theArgs) {
-        this.expressions = this.expressions.concat(theArgs);
-    }
-    remove() {
-        this.expressions = this.expressions.filter(( item ) => {
-            return 0 > arguments.indexOf( item );
-        });
-    }
+    expressionName(){ return AlternativeExpression.EXPRESSION_NAME; }
+    add(...theArgs) { this.expressions = this.expressions.concat(theArgs); }
+    remove() { this.expressions = this.expressions.filter(( item ) => { return 0 > arguments.indexOf( item ); }); }
     parse(input) {
         if (input.end()) return new ParserResult(this, input.loc, -1, null, false, input.getError(ERROR_END, this));
         if ((!this.expressions) || (0 === this.expressions.length)) return new ParserResult(this, input.loc, 0, null, false, input.getError(ERROR_EXPRESSIONS_NOT_SET, this));
-        super.reset();
         let loc = input.loc;
         let line = input.line;
         let linePosition = input.linePosition;
@@ -339,28 +301,23 @@ export class AlternativeExpression extends Expression {
  * RepeatingExpression
  * A repeating expression appears 0 or more times.
  */
-export class RepeatingExpression extends Expression
-{
+export class RepeatingExpression {
+    static EXPRESSION_NAME = 'RepeatingExpression';
     static MAXIMUM_ALLOWED_INFINITE = -1;
     static OPTIONAL_WHITESPACE = new RepeatingExpression(CharacterSequence.WHITESPACE, 0, 1);
 
-    constructor(expression, minimumRequired, maximumAllowed) {
-        super();
-        this.reset(expression, minimumRequired, maximumAllowed);
-    }
+    constructor(expression, minimumRequired, maximumAllowed) { this.reset(expression, minimumRequired, maximumAllowed); }
     reset(expression, minimumRequired, maximumAllowed) {
-        super.reset();
         this.expression = expression;
         this.minimumRequired = minimumRequired;
         this.maximumAllowed = maximumAllowed;
         if ((!minimumRequired) && (0 !== minimumRequired)) this.minimumRequired = 0;
         if (!maximumAllowed) this.maximumAllowed = RepeatingExpression.MAXIMUM_ALLOWED_INFINITE;
     }
-    expressionName(){ return 'RepeatingExpression'; }
+    expressionName(){ return RepeatingExpression.EXPRESSION_NAME; }
     parse(input) {
         if (input.end()) return new ParserResult(this, input.loc, -1, null, false, input.getError(ERROR_END, this));
         if (!this.expression) return new ParserResult(this, input.loc, 0, null, false, input.getError(ERROR_EXPRESSION_NOT_SET, this));
-        super.reset();
         let str = '';
         let totalCount = 0;
         let matchCount = 0;
@@ -408,21 +365,14 @@ export class RepeatingExpression extends Expression
  * UntilExpression
  * Consumes characters until a given expression is found.
  */
-export class UntilExpression extends Expression
-{
-    constructor(expression) {
-        super();
-        this.reset(expression);
-    }
-    reset(expression) {
-        super.reset();
-        this.expression = expression;
-    }
-    expressionName(){ return 'UntilExpression'; }
+export class UntilExpression {
+    static EXPRESSION_NAME = 'UntilExpression';
+    constructor(expression) { this.reset(expression); }
+    reset(expression) { this.expression = expression; }
+    expressionName(){ return UntilExpression.EXPRESSION_NAME; }
     parse(input) {
         if (input.end()) return new ParserResult(this, input.loc, -1, null, false, input.getError(ERROR_END, this));
         if (!this.expression) return new ParserResult(this, input.loc, 0, null, false, input.getError(ERROR_EXPRESSION_NOT_SET, this));
-        super.reset();
         let str = '';
         let matched = false;
         let children = [];
@@ -454,5 +404,84 @@ export class UntilExpression extends Expression
             return error;
         }
         return new ParserResult(this, input.loc, str.length, str, matched, null, children);
+    }
+}
+
+/**
+ * MarkedExpression
+ * Marked expression acts as a signal to NestedExpression that the data values of a nested pair
+ * of expressions should match.
+ */
+export class MarkedExpression {
+    static EXPRESSION_NAME = 'MarkedExpression';
+    constructor(expression) { this.reset(expression); }
+    reset(expression) { this.expression = expression; }
+    expressionName(){ return MarkedExpression.EXPRESSION_NAME; }
+    parse(input) {
+        if (!this.expression) return new ParserResult(this, input.loc, 0, null, false, input.getError(ERROR_EXPRESSION_NOT_SET, this));
+        let result = this.expression.parse(input);
+        return {...result, expression: this, children: [ result ]};
+    }
+}
+
+/**
+ * NestedExpression
+ * An expression built from two child expressions. The first expression can repeat n number of times. After this,
+ * the second expression MUST repeat n number of times. If the first expression is a MarkedExpression or has
+ * children that are MarkedExpressions, the second expression must have matching MarkedExpressions and their run time
+ * data values must match.
+ *
+ * Originally used for HTML tags, which can have HTML tags nested inside them. The tag names are marked.
+ */
+export class NestedExpression {
+    static EXPRESSION_NAME = 'NestedExpression';
+    constructor(expression1, expression2) { this.reset(expression1, expression2); }
+    reset(expression1, expression2) {
+        this.expression1 = expression1;
+        this.expression2 = expression2;
+    }
+    expressionName(){ return NestedExpression.EXPRESSION_NAME; }
+    parse(input) {
+        if (input.end()) return new ParserResult(this, input.loc, -1, null, false, input.getError(ERROR_END, this));
+        if ((!this.expression1) || (!this.expression2)) return new ParserResult(this, input.loc, 0, null, false, input.getError(ERROR_EXPRESSIONS_NOT_SET, this));
+        let loc = input.loc;
+        let line = input.line;
+        let linePosition = input.linePosition;
+        let firstExpression = new RepeatingExpression( this.expression1, 0, RepeatingExpression.MAXIMUM_ALLOWED_INFINITE );
+        let firstResult = firstExpression.parse(input);
+        if (!firstResult.matched) return {...firstResult, expression: this, children: [ result ]};
+        let firstMatchCount = firstResult.children.length;
+        let secondExpression = new RepeatingExpression( this.expression2, firstMatchCount, firstMatchCount );
+        let secondResult = secondExpression.parse(input);
+        let children = [].concat(firstResult.children).concat(secondResult.children);
+        let data = firstResult.data + secondResult.data;
+        if (!secondResult.matched) return {...secondResult, expression: this, data: data, children: children };
+
+        let markedExpressionsMatch = this.doMarkedExpressionsMatch( firstResult, secondResult );
+        if (!markedExpressionsMatch) {
+            let error = new ParserResult(this, input.loc, 0, data, false, input.getError(ERROR_NESTED_EXPRESSION_MARKED_EXPRESSIONS_DO_NOT_MATCH, this), children);
+            input.loc = loc;
+            input.line = line;
+            input.linePosition = linePosition;
+            return error;
+        }
+        return {...secondResult, expression: this, data: data, children: children };
+    }
+    doMarkedExpressionsMatch(parserResult1, parserResult2) {
+        if (!parserResult1 || !parserResult1.expression) return false;
+        if (!parserResult2 || !parserResult2.expression) return false;
+        if (parserResult1.expression.expressionName() === MarkedExpression.EXPRESSION_NAME) {
+            if (parserResult2.expression.expressionName() !== MarkedExpression.EXPRESSION_NAME) return false;
+            if (parserResult1.data !== parserResult2.data) return false;
+        }
+        if (!parserResult1.children) return !parserResult2.children;
+        for (let loop = 0; loop < parserResult1.children.length; loop++) {
+            if (loop >= parserResult2.children.length) return false;
+            let child1 = parserResult1.children[loop];
+            let child2 = parserResult2.children[loop];
+            let matches = this.doMarkedExpressionsMatch(child1, child2);
+            if (!matches) return false;
+        }
+        return true;
     }
 }

@@ -1,9 +1,9 @@
 //@formatter:off
 'use strict';
-import { ParserInput, ParserResult, ParserError, Expression } from './parser'
+import { ParserInput, ParserResult, ParserError } from './parser'
 import { AlternativeExpression, StringExpression, LiteralExpression } from './parser'
 import { CharacterSequence, ExpressionSequence, RepeatingExpression } from './parser'
-import { UntilExpression } from './parser'
+import { UntilExpression, MarkedExpression, NestedExpression } from './parser'
 
 describe( 'As a developer, I need to work with parsing tools', function() {
     beforeAll(() => {
@@ -175,10 +175,6 @@ describe( 'As a developer, I need to work with parsing tools', function() {
         expect(parseResult.matched).toEqual(true);
         expect(parseResult.error).toEqual('ERROR');
         expect(parseResult.children).toEqual('CHILDREN');
-    });
-    it ( 'should provide an expression base class', (  ) => {
-        let expression = new Expression();
-        expect(expression.parse(new ParserInput('ABCDEFG', 0))).toEqual(new ParserResult(expression));
     });
     it ( 'should provide an expression that can parse strings', (  ) => {
         let expression = new StringExpression();
@@ -481,6 +477,84 @@ describe( 'As a developer, I need to work with parsing tools', function() {
         expect(result.matched).toEqual(true);
         expect(result.children.length).toEqual(1);
         expect(result.children[0].data).toEqual('<');
+    });
+    it ( 'should be able to mark an expression', (  ) => {
+        let expression = new LiteralExpression('big');
+        let marked_expression = new MarkedExpression( expression );
+        expect(marked_expression.expression).toEqual(expression);
+        let result = marked_expression.parse(new ParserInput('big<', 0));
+        expect(result.loc).toEqual(3);
+        expect(result.count).toEqual(3);
+        expect(result.data).toEqual('big');
+        expect(result.matched).toEqual(true);
+        expect(result.expression).toEqual(marked_expression);
+        expect(result.children.length).toEqual(1);
+        expect(result.children[0].data).toEqual('big');
+    });
+    it ( 'should handle nested expressions', (  ) => {
+        let expression1 = new LiteralExpression('big');
+        let expression2 = new LiteralExpression('small');
+        let nested_expression = new NestedExpression( expression1, expression2 );
+        expect(nested_expression.expression1).toEqual(expression1);
+        expect(nested_expression.expression2).toEqual(expression2);
+        let result = nested_expression.parse(new ParserInput('bigbigbigsmallsmallsmall', 0));
+        expect(result.matched).toEqual(true);
+        expect(result.data).toEqual('bigbigbigsmallsmallsmall');
+        expect(result.children.length).toEqual(6);
+        expect(result.children[0].data).toEqual('big');
+        expect(result.children[1].data).toEqual('big');
+        expect(result.children[2].data).toEqual('big');
+        expect(result.children[3].data).toEqual('small');
+        expect(result.children[4].data).toEqual('small');
+        expect(result.children[5].data).toEqual('small');
+
+        result = nested_expression.parse(new ParserInput('bigbigbigsmallsmallsmallsmall', 0));
+        expect(result.matched).toEqual(true);
+        expect(result.data).toEqual('bigbigbigsmallsmallsmall');
+        expect(result.children.length).toEqual(6);
+        expect(result.children[0].data).toEqual('big');
+        expect(result.children[1].data).toEqual('big');
+        expect(result.children[2].data).toEqual('big');
+        expect(result.children[3].data).toEqual('small');
+        expect(result.children[4].data).toEqual('small');
+        expect(result.children[5].data).toEqual('small');
+
+        result = nested_expression.parse(new ParserInput('bigbigbigsmallsmall', 0));
+        expect(result.matched).toEqual(false);
+        expect(result.data).toEqual('bigbigbigsmallsmall');
+        expect(result.children.length).toEqual(6);
+        expect(result.children[0].data).toEqual('big');
+        expect(result.children[1].data).toEqual('big');
+        expect(result.children[2].data).toEqual('big');
+        expect(result.children[3].data).toEqual('small');
+        expect(result.children[4].data).toEqual('small');
+        expect(result.children[5].data).toEqual(null);
+
+        let marked_character_sequence = new MarkedExpression(new CharacterSequence('xyz'));
+        let expression_sequence1 = new ExpressionSequence(expression1, marked_character_sequence);
+        let expression_sequence2 = new ExpressionSequence(expression2, marked_character_sequence);
+        nested_expression = new NestedExpression( expression_sequence1, expression_sequence2 );
+        result = nested_expression.parse(new ParserInput('bigxxbigyybigzzsmallxxsmallyysmallzz', 0));
+        expect(result.matched).toEqual(true);
+        expect(result.data).toEqual('bigxxbigyybigzzsmallxxsmallyysmallzz');
+        expect(result.children.length).toEqual(6);
+        expect(result.children[0].data).toEqual('bigxx');
+        expect(result.children[1].data).toEqual('bigyy');
+        expect(result.children[2].data).toEqual('bigzz');
+        expect(result.children[3].data).toEqual('smallxx');
+        expect(result.children[4].data).toEqual('smallyy');
+        expect(result.children[5].data).toEqual('smallzz');
+
+        result = nested_expression.parse(new ParserInput('bigxxbigyybigzzsmallzzsmallyysmallxx', 0));
+        expect(result.matched).toEqual(false);
+        expect(result.data).toEqual('bigxxbigyybigzzsmallzzsmallyysmallxx');
+        expect(result.children.length).toEqual(6);
+        expect(result.children[0].data).toEqual('bigxx');
+        expect(result.children[1].data).toEqual('bigyy');
+        expect(result.children[2].data).toEqual('bigzz');
+        expect(result.children[3].data).toEqual('smallzz');
+        expect(result.children[4].data).toEqual('smallyy');
+        expect(result.children[5].data).toEqual('smallxx');
     });
     it ( 'should provide provide useful error messages', (  ) => {
         let str = 'ABCDEFG';
@@ -832,6 +906,47 @@ describe( 'As a developer, I need to work with parsing tools', function() {
         expect(result.error.loc).toEqual(0);
         expect(result.error.line).toEqual(0);
         expect(result.error.linePosition).toEqual(0);
+
+        parserInput = new ParserInput('', 0);
+        expression = new NestedExpression();
+        result = expression.parse(parserInput);
+        expect(result.loc).toEqual(0);
+        expect(result.count).toEqual(-1);
+        expect(result.data).toEqual(null);
+        expect(result.matched).toEqual(false);
+        expect(result.error.error).toEqual('End of input.');
+        expect(result.error.expression).toEqual(expression);
+        expect(result.error.loc).toEqual(0);
+        expect(result.error.line).toEqual(0);
+        expect(result.error.linePosition).toEqual(0);
+
+        parserInput = new ParserInput('TEXT', 0);
+        result = expression.parse(parserInput);
+        expect(result.loc).toEqual(0);
+        expect(result.count).toEqual(0);
+        expect(result.data).toEqual(null);
+        expect(result.matched).toEqual(false);
+        expect(result.error.error).toEqual('Expressions not set.');
+        expect(result.error.expression).toEqual(expression);
+        expect(result.error.loc).toEqual(0);
+        expect(result.error.line).toEqual(0);
+        expect(result.error.linePosition).toEqual(0);
+
+        let expression1 = new LiteralExpression('big');
+        let expression2 = new LiteralExpression('small');
+        let marked_character_sequence = new MarkedExpression(new CharacterSequence('xyz'));
+        let expression_sequence1 = new ExpressionSequence(expression1, marked_character_sequence);
+        let expression_sequence2 = new ExpressionSequence(expression2, marked_character_sequence);
+        let nested_expression = new NestedExpression( expression_sequence1, expression_sequence2 );
+        result = nested_expression.parse(new ParserInput('bigxxbigyybigzzsmallzzsmallyysmallxx', 0));
+        expect(result.loc).toEqual(36);
+        expect(result.count).toEqual(0);
+        expect(result.data).toEqual('bigxxbigyybigzzsmallzzsmallyysmallxx');
+        expect(result.matched).toEqual(false);
+        expect(result.error.error).toEqual('Marked expressions do not match.');
+        expect(result.error.expression).toEqual(nested_expression);
+        expect(result.error.loc).toEqual(36);
+        expect(result.error.line).toEqual(0);
+        expect(result.error.linePosition).toEqual(41);
     });
 });
-
