@@ -248,7 +248,7 @@ mod test {
         let node = parser.parse_element( );
         assert_eq!(node.node_type, dom::NodeType::Element(
             dom::ElementData {
-                tag_name: "TAG".to_string(),
+                tag_name: "SIMPLE_ELEMENT".to_string(),
                 attributes: attrs.clone()
             }
         ));
@@ -261,7 +261,7 @@ mod test {
         let node = parser.parse_element( );
         assert_eq!(node.node_type, dom::NodeType::Element(
             dom::ElementData {
-                tag_name: "TAG".to_string(),
+                tag_name: "SIMPLE_ELEMENT".to_string(),
                 attributes: attrs.clone()
             }
         ));
@@ -276,7 +276,7 @@ mod test {
         let node = parser.parse_element( );
         assert_eq!(node.node_type, dom::NodeType::Element(
             dom::ElementData {
-                tag_name: "TAG".to_string(),
+                tag_name: "SIMPLE_ELEMENT".to_string(),
                 attributes: attrs.clone()
             }
         ));

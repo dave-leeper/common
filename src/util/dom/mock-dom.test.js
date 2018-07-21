@@ -139,8 +139,8 @@ describe( 'As a developer, I need mock DOM elements for testing.', function() {
     });
     it ( 'should be able to create elements and text nodes', (  ) => {
         let document = new MockDOM();
-        let element = document.createElement('TAG');
-        expect(element.tagName).toBe('TAG');
+        let element = document.createElement('SIMPLE_ELEMENT');
+        expect(element.tagName).toBe('SIMPLE_ELEMENT');
         expect(element.classList.classes.length).toBe(0);
         expect(element.children.length).toBe(0);
         expect(element.attributes.length).toBe(0);
@@ -163,14 +163,14 @@ describe( 'As a developer, I need mock DOM elements for testing.', function() {
     });
     it ( 'should be able to add element event listeners', (  ) => {
         let document = new MockDOM();
-        let element = document.createElement('TAG');
+        let element = document.createElement('SIMPLE_ELEMENT');
         element.addEventListener('TYPE', document, null);
         expect(element.eventListeners.length).toBe(1);
         expect(element.eventListeners[0]).toEqual({ type: 'TYPE', listener: document, options: null });
     });
     it ( 'should be able to set and remove element attributes', (  ) => {
         let document = new MockDOM();
-        let element = document.createElement('TAG');
+        let element = document.createElement('SIMPLE_ELEMENT');
         element.setAttribute('ATTR1', 'VALUE1');
         element.setAttribute('ATTR2', 'VALUE2');
         expect(element.attributes.length).toBe(2);

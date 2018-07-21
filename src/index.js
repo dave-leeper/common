@@ -94,16 +94,16 @@ export default class Parler extends React.Component {
         this.userRESTService = new UserRESTService(ConfigService.getServerURLBase(), ConfigService.getHeaders());
         this.postRESTService = new PostRESTService(ConfigService.getServerURLBase(), ConfigService.getHeaders());
         this.postRESTService.getPost('b83fbfd8a11284e9193f4aec462963df').then(( response ) => {
-            let body = response.data.post.body;
+            let body = response.data.post.html;
             // console.log("POST REST SERVICE response: " + JSON.stringify(body));
             // console.log("POST REST SERVICE body[0]: " + body[0] + ", body[1]: " + body[1]);
             // console.log("POST REST SERVICE body[2]: " + body[2] + ", body[3]: " + body[3]);
             // console.log("POST REST SERVICE body[4]: " + body[4] + ", body[5]: " + body[5]);
-            let codepoint0 = parseInt(String(body.codePointAt(0))).toString(16);
-            let codepoint1 = parseInt(String(body.codePointAt(1))).toString(16);
-            let codepoint2 = parseInt(String(body.codePointAt(2))).toString(16);
-            let codepoint3 = parseInt(String(body.codePointAt(3))).toString(16);
-            let codepoint = ((body.codePointAt(0) + body.codePointAt(1)) - 0xD800) * 0x400 + (body.codePointAt(2) + body.codePointAt(3)) - 0xDC00 + 0x10000;
+            let codepoint0 = parseInt(String(html.codePointAt(0))).toString(16);
+            let codepoint1 = parseInt(String(html.codePointAt(1))).toString(16);
+            let codepoint2 = parseInt(String(html.codePointAt(2))).toString(16);
+            let codepoint3 = parseInt(String(html.codePointAt(3))).toString(16);
+            let codepoint = ((html.codePointAt(0) + html.codePointAt(1)) - 0xD800) * 0x400 + (html.codePointAt(2) + html.codePointAt(3)) - 0xDC00 + 0x10000;
 
             function findSurrogatePair(point) {
                 // assumes point > 0xffff

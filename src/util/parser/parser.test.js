@@ -180,12 +180,12 @@ describe( 'As a developer, I need to work with parsing tools', function() {
         let expression = new StringExpression();
         expect(expression.quoteCharacter).toEqual('"');
         expect(expression.escapeCharacter).toEqual('\\');
-        expect(expression.parse(new ParserInput('"ABCDEFG"', 0))).toEqual(new ParserResult(expression, 9, 7, 'ABCDEFG', true));
-        expect(expression.parse(new ParserInput('"ABCD\\\\EFG"', 0))).toEqual(new ParserResult(expression, 11, 8, 'ABCD\\EFG', true));
+        expect(expression.parse(new ParserInput('"ABCDEFG"', 0))).toEqual(new ParserResult(expression, 9, 9, '"ABCDEFG"', true));
+        expect(expression.parse(new ParserInput('"ABCD\\\\EFG"', 0))).toEqual(new ParserResult(expression, 11, 10, '"ABCD\\EFG"', true));
         expression.escapeCharacter = '?';
-        expect(expression.parse(new ParserInput('"ABCD??EFG"', 0))).toEqual(new ParserResult(expression, 11, 8, 'ABCD?EFG', true));
+        expect(expression.parse(new ParserInput('"ABCD??EFG"', 0))).toEqual(new ParserResult(expression, 11, 10, '"ABCD?EFG"', true));
         expression.quoteCharacter = '`';
-        expect(expression.parse(new ParserInput('`ABCD??EFG`', 0))).toEqual(new ParserResult(expression, 11, 8, 'ABCD?EFG', true));
+        expect(expression.parse(new ParserInput('`ABCD??EFG`', 0))).toEqual(new ParserResult(expression, 11, 10, '`ABCD?EFG`', true));
         let result = expression.parse(new ParserInput('`ABCD??EFG', 0));
         expect(result.loc).toEqual(10);
         expect(result.data).toEqual(null);
@@ -206,6 +206,15 @@ describe( 'As a developer, I need to work with parsing tools', function() {
         expect(result.data).toEqual('ABE');
         expect(result.count).toEqual(0);
         expect(result.matched).toEqual(false);
+
+        expression = new LiteralExpression('ABCDEFG', { case: LiteralExpression.UPPER });
+        expect(expression.parse(new ParserInput('abcdefg', 0))).toEqual(new ParserResult(expression, 7, 7, 'abcdefg', true));
+
+        expression = new LiteralExpression('abcdefg', { case: LiteralExpression.LOWER });
+        expect(expression.parse(new ParserInput('ABCDEFG', 0))).toEqual(new ParserResult(expression, 7, 7, 'ABCDEFG', true));
+
+        expression = new LiteralExpression('abcdefg', { case: LiteralExpression.IGNORE });
+        expect(expression.parse(new ParserInput('AbCdEfG', 0))).toEqual(new ParserResult(expression, 7, 7, 'AbCdEfG', true));
     });
     it ( 'should provide an expression that can parse character sequences', (  ) => {
         let expression = new CharacterSequence('ABCDEFG');
@@ -521,7 +530,7 @@ describe( 'As a developer, I need to work with parsing tools', function() {
 
         result = nested_expression.parse(new ParserInput('bigbigbigsmallsmall', 0));
         expect(result.matched).toEqual(false);
-        expect(result.data).toEqual('bigbigbigsmallsmall');
+        expect(result.data).toEqual(null);
         expect(result.children.length).toEqual(6);
         expect(result.children[0].data).toEqual('big');
         expect(result.children[1].data).toEqual('big');
@@ -547,6 +556,18 @@ describe( 'As a developer, I need to work with parsing tools', function() {
 
         result = nested_expression.parse(new ParserInput('bigxxbigyybigzzsmallzzsmallyysmallxx', 0));
         expect(result.matched).toEqual(false);
+        expect(result.data).toEqual(null);
+        expect(result.children.length).toEqual(6);
+        expect(result.children[0].data).toEqual('bigxx');
+        expect(result.children[1].data).toEqual('bigyy');
+        expect(result.children[2].data).toEqual('bigzz');
+        expect(result.children[3].data).toEqual('smallzz');
+        expect(result.children[4].data).toEqual('smallyy');
+        expect(result.children[5].data).toEqual('smallxx');
+
+        nested_expression = new NestedExpression( expression_sequence1, expression_sequence2, { reverse: true } );
+        result = nested_expression.parse(new ParserInput('bigxxbigyybigzzsmallzzsmallyysmallxx', 0));
+        expect(result.matched).toEqual(true);
         expect(result.data).toEqual('bigxxbigyybigzzsmallzzsmallyysmallxx');
         expect(result.children.length).toEqual(6);
         expect(result.children[0].data).toEqual('bigxx');
@@ -939,14 +960,14 @@ describe( 'As a developer, I need to work with parsing tools', function() {
         let expression_sequence2 = new ExpressionSequence(expression2, marked_character_sequence);
         let nested_expression = new NestedExpression( expression_sequence1, expression_sequence2 );
         result = nested_expression.parse(new ParserInput('bigxxbigyybigzzsmallzzsmallyysmallxx', 0));
-        expect(result.loc).toEqual(36);
+        expect(result.loc).toEqual(0);
         expect(result.count).toEqual(0);
-        expect(result.data).toEqual('bigxxbigyybigzzsmallzzsmallyysmallxx');
+        expect(result.data).toEqual(null);
         expect(result.matched).toEqual(false);
         expect(result.error.error).toEqual('Marked expressions do not match.');
         expect(result.error.expression).toEqual(nested_expression);
-        expect(result.error.loc).toEqual(36);
+        expect(result.error.loc).toEqual(0);
         expect(result.error.line).toEqual(0);
-        expect(result.error.linePosition).toEqual(41);
+        expect(result.error.linePosition).toEqual(0);
     });
 });

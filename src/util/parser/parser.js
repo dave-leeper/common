@@ -13,6 +13,13 @@ const ERROR_ALTERNATIVE_EXPRESSION_NO_EXPRESSIONS_MATCHED = 'No expressions matc
 const ERROR_REPEATING_EXPRESSION_DID_NOT_MATCH_ENOUGH_TIMES = 'Did not match enough times.';
 const ERROR_NESTED_EXPRESSION_MARKED_EXPRESSIONS_DO_NOT_MATCH = 'Marked expressions do not match.';
 
+let arraysIdentical = (a, b) => {
+    let i = a.length;
+    if (i != b.length) return false;
+    while (i--) { if (a[i] !== b[i]) return false; }
+    return true;
+};
+
 export class ParserError {
     constructor(error, parserInput, expression) {
         this.error = error;
@@ -66,12 +73,12 @@ export class ParserInput {
 
 export class ParserResult {
     constructor(expression, loc, count, data, matched, error, children) {
-        this.expression = expression;
         this.loc = loc || 0;
         this.count = count || 0;
         this.data = data || null;
         this.matched = matched || false;
         this.error = error || undefined;
+        this.expression = expression;
         this.children = children || undefined;
     }
 }
@@ -91,10 +98,14 @@ export class StringExpression {
         let char = input.get();
         let matched = false;
         if (this.quoteCharacter !== char) return new ParserResult(this, input.loc, 0, null, false, input.getError(ERROR_STRING_EXPRESSION_NO_OPENING_QUOTE, this));
+        str += char;
+        count++;
 
         while (!input.end()) {
             char = input.get();
             if (this.quoteCharacter === char) {
+                str += char;
+                count++;
                 matched = true;
                 break;
             }
@@ -110,25 +121,47 @@ export class StringExpression {
     }
 }
 
+/**
+ * LiteralExpression
+ * Matches exactly the text provided.
+ *
+ * Constructor options:
+ *  case: UPPER, LOWER, or IGNORE. Converts the data to upper or lower case before comparing. IGNORE means case
+ *  alone will not cause a match to fail.
+ */
 export class LiteralExpression {
     static EXPRESSION_NAME = 'LiteralExpression';
-    constructor(literal) { this.reset(literal); }
-    reset(literal) { this.literal = literal; }
+    static UPPER = 'upper';
+    static LOWER = 'lower';
+    static IGNORE = 'ignore';
+    constructor(literal, options) { this.reset(literal, options); }
+    reset(literal, options) {
+        this.literal = literal;
+        this.options = options;
+    }
     expressionName(){ return LiteralExpression.EXPRESSION_NAME; }
     parse(input) {
         if (input.end()) return new ParserResult(this, input.loc, -1, null, false, input.getError(ERROR_END, this));
         if ((!this.literal) || (0 === this.literal.length)) return new ParserResult(this, input.loc, 0, null, false, input.getError(ERROR_LITERAL_EXPRESSION_NOT_SET, this));
         let str = '';
         let char;
+        let originalChar;
         let count = 0;
         let matched = false;
+        let literal = this.literal.toString();
+        if (this.options && this.options.case && LiteralExpression.IGNORE === this.options.case) literal = literal.toUpperCase();
 
         while (!input.end()) {
-            char = input.get();
-            str += char;
-            if (char !== this.literal[count]) return new ParserResult(this, input.loc, 0, str, false, input.getError(ERROR_DOES_NOT_MATCH, this));
+            originalChar = char = input.get();
+            if (this.options && this.options.case) {
+                if (LiteralExpression.IGNORE === this.options.case) char = char.toString().toUpperCase()[ 0 ];
+                else if (LiteralExpression.UPPER === this.options.case) char = char.toString().toUpperCase()[ 0 ];
+                else if (LiteralExpression.LOWER === this.options.case) char = char.toString().toLowerCase()[ 0 ];
+            }
+            str += originalChar;
+            if (char !== literal[count]) return new ParserResult(this, input.loc, 0, str, false, input.getError(ERROR_DOES_NOT_MATCH, this));
             count++;
-            if (count === this.literal.length) {
+            if (count === literal.length) {
                 matched = true;
                 break;
             }
@@ -431,14 +464,19 @@ export class MarkedExpression {
  * children that are MarkedExpressions, the second expression must have matching MarkedExpressions and their run time
  * data values must match.
  *
+ * Constructor options:
+ *  reverse: Reverse the order of the marked data in the second expression. Useful for HTML-style matches.
+ *  middle: An expression that is run after the first expression and before the second. It must match exactly once.
+ *
  * Originally used for HTML tags, which can have HTML tags nested inside them. The tag names are marked.
  */
 export class NestedExpression {
     static EXPRESSION_NAME = 'NestedExpression';
-    constructor(expression1, expression2) { this.reset(expression1, expression2); }
-    reset(expression1, expression2) {
+    constructor(expression1, expression2, options) { this.reset(expression1, expression2, options); }
+    reset(expression1, expression2, options) {
         this.expression1 = expression1;
         this.expression2 = expression2;
+        this.options = options;
     }
     expressionName(){ return NestedExpression.EXPRESSION_NAME; }
     parse(input) {
@@ -449,39 +487,63 @@ export class NestedExpression {
         let linePosition = input.linePosition;
         let firstExpression = new RepeatingExpression( this.expression1, 0, RepeatingExpression.MAXIMUM_ALLOWED_INFINITE );
         let firstResult = firstExpression.parse(input);
-        if (!firstResult.matched) return {...firstResult, expression: this, children: [ result ]};
-        let firstMatchCount = firstResult.children.length;
-        let secondExpression = new RepeatingExpression( this.expression2, firstMatchCount, firstMatchCount );
-        let secondResult = secondExpression.parse(input);
-        let children = [].concat(firstResult.children).concat(secondResult.children);
-        let data = firstResult.data + secondResult.data;
-        if (!secondResult.matched) return {...secondResult, expression: this, data: data, children: children };
-
-        let markedExpressionsMatch = this.doMarkedExpressionsMatch( firstResult, secondResult );
-        if (!markedExpressionsMatch) {
-            let error = new ParserResult(this, input.loc, 0, data, false, input.getError(ERROR_NESTED_EXPRESSION_MARKED_EXPRESSIONS_DO_NOT_MATCH, this), children);
+        if (!firstResult.matched) {
             input.loc = loc;
             input.line = line;
             input.linePosition = linePosition;
-            return error;
+            return {...firstResult, expression: this, children: [ firstResult ] };
         }
-        return {...secondResult, expression: this, data: data, children: children };
+        let firstMatchCount = firstResult.children.length;
+
+        let middleChildren = [];
+        let middleCount = 0;
+        let middleData = '';
+        if (this.options && this.options.middle) {
+            let middleResult = this.options.middle.parse(input);
+            if (!middleResult.matched) {
+                input.loc = loc;
+                input.line = line;
+                input.linePosition = linePosition;
+                return {...middleResult, expression: this, children: [ firstResult, middleResult ]};
+            }
+            middleChildren = middleResult.children;
+            middleCount = middleResult.count;
+            middleData = middleResult.data;
+        }
+
+        let secondExpression = new RepeatingExpression( this.expression2, firstMatchCount, firstMatchCount );
+        let secondResult = secondExpression.parse(input);
+        let children = [].concat(firstResult.children).concat(middleChildren).concat(secondResult.children);
+        let count = firstResult.count + middleCount + secondResult.count;
+        let data = firstResult.data + middleData + secondResult.data;
+        if (!secondResult.matched) {
+            input.loc = loc;
+            input.line = line;
+            input.linePosition = linePosition;
+            return {...secondResult, expression: this, data: null, children: children };
+        }
+
+        let markedResults1 = this.getMarkedResults(firstResult);
+        let markedResults2 = this.getMarkedResults(secondResult);
+        if (this.options && this.options.reverse) markedResults2.reverse();
+        if (!arraysIdentical(markedResults1, markedResults2)) {
+            input.loc = loc;
+            input.line = line;
+            input.linePosition = linePosition;
+            return new ParserResult(this, input.loc, 0, null, false, input.getError(ERROR_NESTED_EXPRESSION_MARKED_EXPRESSIONS_DO_NOT_MATCH, this), children);
+        }
+        return {...secondResult, expression: this, count: count, data: data, children: children };
     }
-    doMarkedExpressionsMatch(parserResult1, parserResult2) {
-        if (!parserResult1 || !parserResult1.expression) return false;
-        if (!parserResult2 || !parserResult2.expression) return false;
-        if (parserResult1.expression.expressionName() === MarkedExpression.EXPRESSION_NAME) {
-            if (parserResult2.expression.expressionName() !== MarkedExpression.EXPRESSION_NAME) return false;
-            if (parserResult1.data !== parserResult2.data) return false;
+    getMarkedResults(parserResults) {
+        let markedResults = [];
+        if (parserResults.expression.expressionName() === MarkedExpression.EXPRESSION_NAME) markedResults.push(parserResults.data);
+        if (parserResults.children) {
+            for (let loop = 0; loop < parserResults.children.length; loop++) {
+                let child = parserResults.children[loop];
+                let results = this.getMarkedResults(child);
+                markedResults = markedResults.concat(results);
+            }
         }
-        if (!parserResult1.children) return !parserResult2.children;
-        for (let loop = 0; loop < parserResult1.children.length; loop++) {
-            if (loop >= parserResult2.children.length) return false;
-            let child1 = parserResult1.children[loop];
-            let child2 = parserResult2.children[loop];
-            let matches = this.doMarkedExpressionsMatch(child1, child2);
-            if (!matches) return false;
-        }
-        return true;
+        return markedResults;
     }
 }
